@@ -281,7 +281,9 @@ namespace fivemhackdetector
             "wdmaud.drv",
             "msacm32.drv",
             "MSACM32.dll",
-            "midimap.dll"
+            "midimap.dll",
+            "graphics-hook64.dll",
+            "MicrosoftAccountWAMExtension.dll"
         };
 
         static void Main(string[] args)
@@ -308,7 +310,7 @@ namespace fivemhackdetector
                            fullString += _trustedModules[i3];
                         }
 
-                        if (!fullString.Contains(module.ModuleName)) { Console.WriteLine($"fount a suspicious module {module.ModuleName}"); }
+                        if (!fullString.Contains(module.ModuleName) && !module.ModuleName.EndsWith(".exe")) { Console.WriteLine($"fount a suspicious module {module.ModuleName}"); }
                     }
                 }
             }
