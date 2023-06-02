@@ -1,9 +1,13 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.IO;
 using System.Linq;
+using System.Security.Cryptography;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
+using static System.Net.WebRequestMethods;
 
 namespace fivemhackdetector
 {
@@ -297,9 +301,9 @@ namespace fivemhackdetector
 
         static void Main(string[] args)
         {
-            Console.Title = "Fivem cheat detector | Svvayyz#7153";
+            Console.Title = "Scanner | Svvayyz#7153";
 
-            Console.WriteLine("begun scanning!");
+            Log(LogType.SUCCESS, "begun scanning!");
 
             for (int i = 0; i < Process.GetProcesses().Length; i++)
             {
@@ -307,7 +311,7 @@ namespace fivemhackdetector
 
                 if (process.ProcessName.Contains("GTAProcess"))
                 {
-                    Console.WriteLine($"fount fivem process with id of {process.Id}");
+                    Log(LogType.SUCCESS, $"fount fivem process with id of {process.Id}");
 
                     for (int i2 = 0; i2 < process.Modules.Count; i2++)
                     {
@@ -319,16 +323,38 @@ namespace fivemhackdetector
                            fullString += _trustedModules[i3];
                         }
 
-                        if (!fullString.Contains(module.ModuleName) && !module.ModuleName.EndsWith(".exe")) { Console.WriteLine($"fount a suspicious module {module.ModuleName}"); }
-
-                        if (module.ModuleName == "dcomp.dll")
-                            Console.WriteLine("fount eulen!");
+                        if (!fullString.Contains(module.ModuleName) && !module.ModuleName.EndsWith(".exe")) { Log(LogType.WARNING, $"fount a suspicious (unknown) module {module.ModuleName}"); }
                     }
                 }
             }
 
-            Console.WriteLine("finished scanning!");
+            Log(LogType.SUCCESS, "finished scanning!");
             Console.ReadLine();
+        }
+
+        enum LogType {
+            SUCCESS,
+            WARNING
+        }
+
+        private static void Log(LogType type, string message)
+        {
+            Console.ForegroundColor = ConsoleColor.White;
+            Console.Write("[");
+
+            if (type == LogType.SUCCESS)
+            {
+                Console.ForegroundColor = ConsoleColor.Green;
+                Console.Write("success");
+            }
+            else if (type == LogType.WARNING)
+            {
+                Console.ForegroundColor = ConsoleColor.Yellow;
+                Console.Write("warning");
+            }
+
+            Console.ForegroundColor = ConsoleColor.White;
+            Console.Write("] " + message + "\n");
         }
     }
 }
