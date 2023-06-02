@@ -283,7 +283,16 @@ namespace fivemhackdetector
             "MSACM32.dll",
             "midimap.dll",
             "graphics-hook64.dll",
-            "MicrosoftAccountWAMExtension.dll"
+            "MicrosoftAccountWAMExtension.dll",
+            "explorerframe.dll",
+            "OneCoreUAPCommonProxyStub.dll",
+            "IconCodecService.dll",
+            "LINKINFO.dll",
+            "ntshrui.dll",
+            "cscapi.dll",
+            "policymanager.dll",
+            "TaskFlowDataEngine.dll",
+            "cdp.dll"
         };
 
         static void Main(string[] args)
