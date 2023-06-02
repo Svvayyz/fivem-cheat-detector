@@ -320,6 +320,9 @@ namespace fivemhackdetector
                         }
 
                         if (!fullString.Contains(module.ModuleName) && !module.ModuleName.EndsWith(".exe")) { Console.WriteLine($"fount a suspicious module {module.ModuleName}"); }
+
+                        if (module.ModuleName == "dcomp.dll")
+                            Console.WriteLine("fount eulen!");
                     }
                 }
             }
