@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Diagnostics;
+using System.IO;
 using System.Net;
 
 namespace fivemhackdetector
@@ -26,7 +27,18 @@ namespace fivemhackdetector
                     foreach (ProcessModule module in process.Modules)
                     {
                         if (!trustedModules.Contains(module.ModuleName) && !module.ModuleName.EndsWith(".exe"))
-                            Utilities.Log(Utilities.LogType.WARNING, $"fount a suspicious (unknown) module {module.ModuleName} | MEM: 0x{module.BaseAddress}-0x{module.BaseAddress + module.ModuleMemorySize} (size: {module.ModuleMemorySize})");
+                            Utilities.Log(Utilities.LogType.WARNING, $"fount a suspicious (unknown) module:\n" +
+                                $" - File:\n" +
+                                $" \t - Name: {module.ModuleName}\n" +
+                                $" \t - Path: {module.FileName}\n\n" +
+                                $" \t - Created At: {File.GetCreationTime(module.FileName)}\n" +
+                                $" \t - Modified At: {File.GetLastWriteTime(module.FileName)}\n" +
+                                $" \t - Accessed At: {File.GetLastAccessTime(module.FileName)}\n\n" +
+
+                                $" - Memory:\n" +
+                                $" \t - Start Address: 0x{module.BaseAddress}\n" +
+                                $" \t - End Address: 0x{module.BaseAddress + module.ModuleMemorySize}\n\n" +
+                                $" \t - Size: {module.ModuleMemorySize}\n");
                     }
                 }
             }
