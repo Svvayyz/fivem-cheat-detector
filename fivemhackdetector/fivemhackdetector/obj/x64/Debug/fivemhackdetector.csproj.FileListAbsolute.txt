@@ -1,8 +1,0 @@
-C:\Users\boruw\source\repos\fivemhackdetector\fivemhackdetector\bin\x64\Debug\fivemhackdetector.exe.config
-C:\Users\boruw\source\repos\fivemhackdetector\fivemhackdetector\bin\x64\Debug\fivemhackdetector.exe
-C:\Users\boruw\source\repos\fivemhackdetector\fivemhackdetector\bin\x64\Debug\fivemhackdetector.pdb
-C:\Users\boruw\source\repos\fivemhackdetector\fivemhackdetector\obj\x64\Debug\fivemhackdetector.csproj.AssemblyReference.cache
-C:\Users\boruw\source\repos\fivemhackdetector\fivemhackdetector\obj\x64\Debug\fivemhackdetector.csproj.SuggestedBindingRedirects.cache
-C:\Users\boruw\source\repos\fivemhackdetector\fivemhackdetector\obj\x64\Debug\fivemhackdetector.csproj.CoreCompileInputs.cache
-C:\Users\boruw\source\repos\fivemhackdetector\fivemhackdetector\obj\x64\Debug\fivemhackdetector.exe
-C:\Users\boruw\source\repos\fivemhackdetector\fivemhackdetector\obj\x64\Debug\fivemhackdetector.pdb
