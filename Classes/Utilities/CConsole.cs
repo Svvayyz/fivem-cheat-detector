@@ -6,8 +6,15 @@ using System.Threading.Tasks;
 
 namespace fivemhackdetector
 {
-    internal class Utilities
+    internal class CConsole
     {
+        public CConsole(string title)
+        {
+            Log(LogType.SUCCESS, "initializing");
+
+            Console.Title = title;
+        }
+
         public enum LogType
         {
             SUCCESS,
@@ -17,7 +24,7 @@ namespace fivemhackdetector
 
         private static Dictionary<LogType, ConsoleColor> colors = new Dictionary<LogType, ConsoleColor>()
         {
-            { LogType.SUCCESS, ConsoleColor.Green },
+            { LogType.SUCCESS, ConsoleColor.Blue },
             { LogType.WARNING, ConsoleColor.Yellow },
             { LogType.ERROR, ConsoleColor.Red }
         };
@@ -29,10 +36,16 @@ namespace fivemhackdetector
             { LogType.ERROR, "error" }
         };
 
-        public static void Log(LogType type, string message)
+        public void Log(LogType type, string message)
         {
             Console.ForegroundColor = ConsoleColor.White;
             Console.Write("[");
+
+            Console.ForegroundColor = ConsoleColor.Blue;
+            Console.Write(DateTime.Now);
+
+            Console.ForegroundColor = ConsoleColor.White;
+            Console.Write("] [");
 
             Console.ForegroundColor = colors[type];
             Console.Write(prefixes[type]);

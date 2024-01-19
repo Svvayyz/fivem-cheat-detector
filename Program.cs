@@ -1,52 +1,172 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
-using System.Net;
+using System.Text;
+
+using fivemhackdetector.Classes;
+using fivemhackdetector.Classes.Mods;
+using fivemhackdetector.Classes.Prefetch;
+using fivemhackdetector.Classes.Scripting;
+using fivemhackdetector.Classes.Utilities;
+using NLua;
+using static fivemhackdetector.Classes.Scripting.CScripting;
 
 namespace fivemhackdetector
 {
     internal class Program
     {
+        public static CConsole cConsole = new CConsole("Scanner \\ Svvayyz");
+        public static CGTAProcess cProcesses = new CGTAProcess();
+        public static CModulesWhitelist cWhitelist = new CModulesWhitelist();
+        public static CPrefetchBlacklist cBlacklist = new CPrefetchBlacklist();
+        public static CPrefetch cPrefetch = new CPrefetch();
+        public static CFiveMMods cMods = new CFiveMMods();
+        public static CScriptingCallbacks cCallbacks = new CScriptingCallbacks();
+
         static void Main(string[] args)
         {
-            Console.Title = "Scanner | Svvayyz#7153";
+            cConsole.Log(CConsole.LogType.SUCCESS, "initialized");
 
-            string trustedModules = new WebClient().DownloadString("https://adorablehvh.pl/trusted.txt");
-            bool fivemDetected = false;
+            #region scripting
+            CScripting cScripting = new CScripting();
 
-            Utilities.Log(Utilities.LogType.SUCCESS, "begun scanning!");
+            foreach (string path in Directory.GetFiles("scripts")) {
+                cConsole.Log(CConsole.LogType.SUCCESS, $"loading {Path.GetFileName(path)}!");
 
-            foreach (Process process in Process.GetProcesses())
+                cScripting.Load(path);
+            }
+            #endregion scripting
+
+            cConsole.Log(CConsole.LogType.SUCCESS, "the process of scanning has began!");
+
+            #region process
+            foreach (Process process in cProcesses.Get())
             {
-                if (process.ProcessName.Contains("GTAProcess"))
+                cConsole.Log(CConsole.LogType.SUCCESS, $"fount fivem process with id of {process.Id}");
+
+                #region modules
+                if (!cWhitelist.bSuccess)
+                    return;
+
+                CModules cModules = new CModules(process, cWhitelist.mWhitelist);
+                foreach (string mod in cModules.Check())
                 {
-                    fivemDetected = true;
+                    cConsole.Log(CConsole.LogType.WARNING, mod);
+                }
 
-                    Utilities.Log(Utilities.LogType.SUCCESS, $"fount fivem process with id of {process.Id}");
+                cConsole.Log(CConsole.LogType.SUCCESS, "finished scanning modules, beggining scanning memory");
+                #endregion modules
+                #region memory
+                if (!cBlacklist.bSuccess)
+                    return;
 
-                    foreach (ProcessModule module in process.Modules)
+                CMemory cMemory = new CMemory(process);
+                List<CMemoryString> strings = cMemory.GetStrings();
+
+                cConsole.Log(CConsole.LogType.SUCCESS, $"found {strings.Count} strings, starting processing");
+
+                foreach (CMemoryString str in strings) {
+                    string st = Encoding.ASCII.GetString(str.szStr);
+
+                    bool bFound = false;
+
+                    if (st.Contains("citizen"))
+                        bFound = true;
+
+                    if (cCallbacks.KeyExists("OnStringProcessing"))
                     {
-                        if (!trustedModules.Contains(module.ModuleName) && !module.ModuleName.EndsWith(".exe"))
-                            Utilities.Log(Utilities.LogType.WARNING, $"fount a suspicious (unknown) module:\n" +
-                                $" - File:\n" +
-                                $" \t - Name: {module.ModuleName}\n" +
-                                $" \t - Path: {module.FileName}\n\n" +
-                                $" \t - Created At: {File.GetCreationTime(module.FileName)}\n" +
-                                $" \t - Modified At: {File.GetLastWriteTime(module.FileName)}\n" +
-                                $" \t - Accessed At: {File.GetLastAccessTime(module.FileName)}\n\n" +
+                        foreach (LuaFunction func in cCallbacks.mCallbacks["OnStringProcessing"])
+                        {
+                            bFound = bool.Parse(func.Call(st, str.iLenght, str.uAddress, bFound)[0].ToString());
+                        }
+                    }
 
-                                $" - Memory:\n" +
-                                $" \t - Start Address: 0x{module.BaseAddress}\n" +
-                                $" \t - End Address: 0x{module.BaseAddress + module.ModuleMemorySize}\n\n" +
-                                $" \t - Size: {module.ModuleMemorySize}\n");
+                    if (bFound)
+                        cConsole.Log(CConsole.LogType.WARNING, st);
+                }
+                #endregion memory
+            }
+            #endregion process
+
+            if (!cProcesses.bFound)
+                cConsole.Log(CConsole.LogType.ERROR, "fivem not found");
+
+            #region files
+            #region mods 
+            List<CFiveMMod> mods = cMods.Get();
+
+            cConsole.Log(CConsole.LogType.SUCCESS, $"found {mods.Count} mods, starting processing");
+
+            foreach (CFiveMMod mod in mods)
+            {
+                bool bFound = true;
+
+                if (cCallbacks.KeyExists("OnModProcessing"))
+                {
+                    foreach (LuaFunction func in cCallbacks.mCallbacks["OnModProcessing"])
+                    {
+                        bFound = bool.Parse(func.Call(mod, bFound)[0].ToString());
                     }
                 }
+
+                if (bFound)
+                    cConsole.Log(CConsole.LogType.WARNING,
+                        "found an unknown mod:\n" +
+                        $" - Name: {mod.szName}\n" +
+                        $" - Path: {mod.szPath}"
+                    );
             }
 
-            if (!fivemDetected) 
-                Utilities.Log(Utilities.LogType.ERROR, "fivem not found");
+            cConsole.Log(CConsole.LogType.SUCCESS, "finished processing mods, beggining scanning prefetch");
+            #endregion mods
+            #region prefetch
+            List<CPrefetchFile> entries = cPrefetch.GetFiles();
 
-            Utilities.Log(Utilities.LogType.SUCCESS, "finished scanning!");
+            cConsole.Log(CConsole.LogType.SUCCESS, $"found {entries.Count} prefetch entries, starting processing");
+
+            foreach (CPrefetchFile file in entries)
+            {
+                CPrefetchBlacklistedFile info = null;
+
+                bool success = cBlacklist.mBlacklist.TryGetValue(file.szCheatName, out info);
+                if (!success)
+                    success = cBlacklist.mBlacklist.TryGetValue(file.szHash, out info);
+
+                if (cCallbacks.KeyExists("OnPrefetchProcessing"))
+                {
+                    foreach (LuaFunction func in cCallbacks.mCallbacks["OnPrefetchProcessing"])
+                    {
+                        success = bool.Parse(func.Call(file, success)[0].ToString());
+                    }
+                }
+
+                if (!success)
+                    continue;
+
+                cConsole.Log(CConsole.LogType.WARNING,
+                    $"found a cheat's loader:\n" +
+                    $" - Info:\n" +
+                    $" \t - Name: {info.szName}\n" +
+                    $" \t - Description: {info.szDescription}\n\n" +
+
+                    $" - File: \n" +
+                    $" \t - Name: {file.szExecutableName}\n" +
+                    $" \t - Path: {file.szPath}\n" +
+                    $" \t - MD5 Hash: {file.szHash}\n\n" +
+
+                    $" \t - Created At: {File.GetCreationTime(file.szPath)}\n" +
+                    $" \t - Modified At: {File.GetLastWriteTime(file.szPath)}\n" +
+                    $" \t - Accessed At: {File.GetLastAccessTime(file.szPath)}"
+                );
+            }
+
+            cConsole.Log(CConsole.LogType.SUCCESS, "finished processing prefetch");
+            #endregion prefetch
+            #endregion files
+
+            cConsole.Log(CConsole.LogType.SUCCESS, "finished scanning!");
+
             Console.ReadLine();
         }
     }
