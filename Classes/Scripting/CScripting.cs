@@ -74,7 +74,7 @@ namespace fivemhackdetector.Classes.Scripting
         }
         class CScriptingString
         {
-            public string get(byte[] bytes)
+            public string Get(byte[] bytes)
             {
                 return Encoding.ASCII.GetString(bytes);
             }

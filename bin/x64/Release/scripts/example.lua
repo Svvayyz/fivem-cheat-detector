@@ -29,3 +29,41 @@ Callbacks:Add("OnPrefetchProcessing", function(file, is_suspicious)
 
     return is_suspicious
 end)
+
+Console.Log("sample log")
+
+if FiveM.Exists() then 
+    local modules = FiveM.GetModules() 
+    local strings = FiveM.GetStrings()
+
+    for i=0, modules.Count do 
+        local module = modules[i]
+
+        Console.Log(module.ModuleName)
+    end 
+end 
+
+local files = CPrefetch.GetFiles()
+for i=0, files.Count do 
+    local file = files[i]
+
+    local success = file.bSuccess
+
+    if success then 
+        local path = file.szPath
+        local exec_name = file.szExecutableName
+        local hash = file.szHash
+        local filenames_used = file.szFileNames
+    end 
+end 
+
+local mods = Mods.Get()
+
+for i=0, mods.Count do 
+    local mod = mods[i]
+
+    local path = mod.szPath
+    local name = mod.szName
+end 
+
+String.Get(byte_array_here)
