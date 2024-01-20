@@ -44,18 +44,19 @@ namespace fivemhackdetector
                 if (!bFound)
                 {
                      result.Add(
-                         $"fount a suspicious (unknown) module:\n" +
-                         $" - File:\n" +
-                         $" \t - Name: {module.ModuleName}\n" +
-                         $" \t - Path: {module.FileName}\n\n" +
-                         $" \t - Created At: {File.GetCreationTime(module.FileName)}\n" +
-                         $" \t - Modified At: {File.GetLastWriteTime(module.FileName)}\n" +
-                         $" \t - Accessed At: {File.GetLastAccessTime(module.FileName)}\n\n" +
+                         $"found a %yellow%suspicious%gray% (unknown) %blue%module%gray%:\n" +
+                         $" - %yellow%File%gray%:\n" +
+                         $" \t - Name: %yellow%{module.ModuleName}%gray%\n" +
+                         $" \t - Path: %yellow%{module.FileName}%gray%\n\n" +
 
-                         $" - Memory:\n" +
-                         $" \t - Start Address: 0x{module.BaseAddress}\n" +
-                         $" \t - End Address: 0x{module.BaseAddress + module.ModuleMemorySize}\n\n" +
-                         $" \t - Size: {module.ModuleMemorySize}"
+                         $" \t - Created At: %yellow%{File.GetCreationTime(module.FileName)}%gray%\n" +
+                         $" \t - Modified At: %yellow%{File.GetLastWriteTime(module.FileName)}%gray%\n" +
+                         $" \t - Accessed At: %yellow%{File.GetLastAccessTime(module.FileName)}%gray%\n\n" +
+
+                         $" - %blue%Memory%gray%:\n" +
+                         $" \t - Start Address: %blue%0x{module.BaseAddress}%gray%\n" +
+                         $" \t - End Address: %blue%0x{module.BaseAddress + module.ModuleMemorySize}%gray%\n\n" +
+                         $" \t - Size: %blue%{module.ModuleMemorySize}%gray%"
                      );
                 }
             }

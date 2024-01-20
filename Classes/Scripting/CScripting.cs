@@ -4,8 +4,7 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Text;
-using System.Threading.Tasks;
-using fivemhackdetector.Classes.Mods;
+
 using NLua;
 
 namespace fivemhackdetector.Classes.Scripting
@@ -13,32 +12,22 @@ namespace fivemhackdetector.Classes.Scripting
     internal class CScripting
     {
         private string szScriptName = "";
+        private string szLastError = "";
 
         class CScriptingConsole
         {
             private string szScriptName = "";
+            private CConsole cConsole;
 
-            public CScriptingConsole(string scriptName)
+            public CScriptingConsole(string scriptName, CConsole console)
             {
                 szScriptName = scriptName;
+                cConsole = console;
             }
 
             public void Log(string str)
             {
-                Console.ForegroundColor = ConsoleColor.White;
-                Console.Write("[");
-
-                Console.ForegroundColor = ConsoleColor.Blue;
-                Console.Write(DateTime.Now);
-
-                Console.ForegroundColor = ConsoleColor.White;
-                Console.Write("] [");
-
-                Console.ForegroundColor = ConsoleColor.Red;
-                Console.Write(szScriptName);
-
-                Console.ForegroundColor = ConsoleColor.White;
-                Console.Write("] " + str + "\n");
+                cConsole.Log($"%gray%[  %green%OK%gray%  ] [%blue%{szScriptName}%gray%] {str}", true);
             }
 
             public void Log(bool b)
@@ -105,7 +94,12 @@ namespace fivemhackdetector.Classes.Scripting
         }
 
         public Lua pState = new Lua();
-        public CScripting() {
+
+        private CConsole cConsole;
+
+        public CScripting(CConsole console) {
+            cConsole = console;
+
             Initialize();
         }
 
@@ -114,14 +108,18 @@ namespace fivemhackdetector.Classes.Scripting
             if (!Directory.Exists("scripts"))
                 Directory.CreateDirectory("scripts");
         }
+        public string GetLastError()
+        {
+            return szLastError;
+        }
 
-        public void Load(string path)
+        public bool Load(string path)
         {
             pState = new Lua();
 
             szScriptName = Path.GetFileName(path);
 
-            pState["Console"] = new CScriptingConsole(szScriptName);
+            pState["Console"] = new CScriptingConsole(szScriptName, cConsole);
             pState["FiveM"] = new CScriptingGTAProcess();
             pState["Prefetch"] = Program.cPrefetch;
             pState["Mods"] = Program.cMods;
@@ -134,8 +132,12 @@ namespace fivemhackdetector.Classes.Scripting
             }
             catch (Exception ex)
             {
-                Program.cConsole.Log(CConsole.LogType.ERROR, $"{ex.Message}");
+                szLastError = ex.Message;
+
+                return false;
             }
+
+            return true;
         }
     }
 }

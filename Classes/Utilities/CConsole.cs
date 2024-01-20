@@ -1,8 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
+using System.IO;
 using System.Text;
-using System.Threading.Tasks;
 
 namespace fivemhackdetector
 {
@@ -10,7 +9,7 @@ namespace fivemhackdetector
     {
         public CConsole(string title)
         {
-            Log(LogType.SUCCESS, "initializing");
+            Log("         Init%blue%ializing", false);
 
             Console.Title = title;
         }
@@ -36,22 +35,121 @@ namespace fivemhackdetector
             { LogType.ERROR, "error" }
         };
 
-        public void Log(LogType type, string message)
+        private static Dictionary<string, ConsoleColor> colorsByNames = new Dictionary<string, ConsoleColor>()
         {
-            Console.ForegroundColor = ConsoleColor.White;
-            Console.Write("[");
+            { "black", ConsoleColor.Black },
+            { "darkblue", ConsoleColor.DarkBlue },
+            { "darkgreen", ConsoleColor.DarkGreen },
+            { "darkcyan", ConsoleColor.DarkCyan },
+            { "darkred", ConsoleColor.DarkRed },
+            { "darkmagenta", ConsoleColor.DarkMagenta },
+            { "darkyellow", ConsoleColor.DarkYellow },
+            { "gray", ConsoleColor.Gray },
+            { "darkgray", ConsoleColor.DarkGray },
+            { "blue", ConsoleColor.Blue },
+            { "green", ConsoleColor.Green },
+            { "cyan", ConsoleColor.Cyan },
+            { "red", ConsoleColor.Red },
+            { "magenta", ConsoleColor.Magenta },
+            { "yellow", ConsoleColor.Yellow },
+            { "white", ConsoleColor.White }
+        };
 
-            Console.ForegroundColor = ConsoleColor.Blue;
-            Console.Write(DateTime.Now);
+        private string szMessages = ""; 
 
-            Console.ForegroundColor = ConsoleColor.White;
-            Console.Write("] [");
+        private void Print(string message, bool add)
+        {
+            if (add)
+                szMessages += message + "\n";
 
-            Console.ForegroundColor = colors[type];
-            Console.Write(prefixes[type]);
+            string[] splitted = message.Split('%');
 
-            Console.ForegroundColor = ConsoleColor.White;
-            Console.Write("] " + message + "\n");
+            if (splitted.Length > 2)
+            {
+                for (int i = 0; i < splitted.Length; i++)
+                {
+                    ConsoleColor color = ConsoleColor.White;
+                    bool success = colorsByNames.TryGetValue(splitted[i], out color);
+
+                    if (success)
+                    {
+                        Console.ForegroundColor = color;
+                    }
+                    else
+                    {
+                        Console.Write(splitted[i]);
+                    }
+                }
+            }
+            else
+            {
+                Console.Write(message);
+            }
+        }
+        public void Refresh()
+        {
+            Console.Clear();
+
+            Print(szMessages, false);
+        }
+        public void Log(string message, bool add)
+        {
+            Print($"%gray%[%blue%{DateTime.Now.ToString("HH:mm:ss.fff")}%gray%] " + message, add);
+
+            Console.Write("\n");
+        }
+
+        private static string animation = @"|/-\";
+        private static Dictionary<string, int> animationKeyFrame = new Dictionary<string, int>();
+        public void ProgressBar(string prefix, float progress, string name)
+        {
+            int keyframe = 0;
+            bool success = animationKeyFrame.TryGetValue(name, out keyframe);
+
+            if (!success)
+                animationKeyFrame.Add(name, 0);
+
+            string progressString = progress.ToString().Replace(",", ".");
+
+            string progressBarString = "";
+            for (int k = 0; k < 6; k++)
+            {
+                if (k > ((progress / 100) * 6))
+                {
+                    progressBarString += "%gray%-";
+                }
+                else
+                {
+                    progressBarString += "%blue%#";
+                }
+            }
+
+            Log($"[{progressBarString}] {prefix} (%blue%{progressString}%gray% {animation[keyframe % animation.Length]})", false);
+
+            animationKeyFrame[name] += 1;
+        }
+
+        public string SaveLog()
+        {
+            string log = szMessages;
+
+            foreach (KeyValuePair<string, ConsoleColor> value in colorsByNames)
+            {
+                log = log.Replace("%" + value.Key + "%", "");
+            }
+
+            if (!Directory.Exists("logs"))
+                Directory.CreateDirectory("logs");
+
+            string path = $"logs\\{DateTime.Now.ToString("dd.MM.yyyy HH.MM.ss")}.log";
+            FileStream stream = File.Create(path);
+
+            byte[] bytes = Encoding.Default.GetBytes(log);
+            stream.Write(bytes, 0, bytes.Length);
+
+            stream.Close();
+
+            return path;
         }
     }
 }
